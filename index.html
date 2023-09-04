@@ -109,7 +109,7 @@
         // Function to send sensor data to the server
         function sendSensorDataToServer(beta) {
             const xhr = new XMLHttpRequest();
-            const url = 'http://YOUR_LAPTOP_IP:3000'; // Replace with your laptop's IP and server port
+            const url = 'http://192.168.30.104:3000'; // Replace with your laptop's IP and server port
             xhr.open('POST', url, true);
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ betaValue: beta }));
