@@ -67,7 +67,7 @@
                         // Display message if time exceeds 60 seconds
                         ctx.fillText(`User not properly seated`, 10, 150);
                     } else {
-                        // Display time message
+                        // Display time message 
                         const timeMessage = `Time: ${timeDiff.toFixed(2)} seconds`;
                         ctx.fillText(`Intermediate Position: Beta value ${roundedBeta}`, 10, 50);
                         ctx.fillText(timeMessage, 10, 100);
@@ -109,7 +109,7 @@
         // Function to send sensor data to the server
         function sendSensorDataToServer(beta) {
             const xhr = new XMLHttpRequest();
-            const url = 'http://YOUR_LAPTOP_IP:YOUR_SERVER_PORT'; // Replace with your laptop's IP and server port
+            const url = 'http://192.168.30.104:3000'; // Replace with your laptop's IP and server port
             xhr.open('POST', url, true);
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ betaValue: beta }));
