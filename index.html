@@ -1,68 +1,119 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mobile Sensor</title>
+    <title>Beta Sensor Value</title>
+    <style>
+        #sensorCanvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
-  <div id="message"></div>
-  <canvas id="sensorCanvas" width="400" height="200"></canvas> <!-- Canvas element for displaying sensor value -->
-  
-  <script>
-    const messageElement = document.getElementById('message');
-    const canvas = document.getElementById('sensorCanvas');
-    const ctx = canvas.getContext('2d');
+    <canvas id="sensorCanvas"></canvas>
+    <button id="startButton">Start</button>
 
-    const ws = new WebSocket('ws://192.168.30.104:4000'); // Replace 'server-ip' with the server's IP address
+    <script>
+        // Get the canvas element
+        const canvas = document.getElementById("sensorCanvas");
 
-    ws.onopen = () => {
-      // Connection is open, display the "connected" message on the mobile screen
-      messageElement.innerText = 'Connected to the server';
+        // Get the 2D context of the canvas
+        const ctx = canvas.getContext("2d");
 
-      // Request permission to share time
-      ws.send(JSON.stringify({ type: 'requestPermission' }));
-    };
+        // Set the font style for displaying text
+        ctx.font = "15px Arial"; // increased font size
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+        // Variables to track time and beta value
+        let startTime = 0;
+        let endTime = 0;
+        let prevBeta = 0;
+        let hasProperSeating = false;
+        let eventListenerAdded = false;
 
-      if (data.type === 'permissionGranted') {
-        // Permission to share time has been granted
-        console.log('Permission granted to share time.');
+        // Function to update the canvas with the sensor data
+        function updateCanvas(beta) {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Implement your time-sharing logic here
-      } else if (data.type === 'permissionDenied') {
-        // Permission to share time has been denied
-        console.log('Permission denied to share time.');
-      } else if (data.type === 'displaySensorValue') {
-        // Display the sensor value on the canvas
-        displaySensorValue(data.beta);
-      }
-    };
+            // Round the beta value to the nearest integer
+            const roundedBeta = Math.round(beta);
 
-    // Function to send sensor data to the server
-    function sendSensorData(beta) {
-      ws.send(JSON.stringify({ type: 'sensorData', beta }));
-    }
+            if (roundedBeta < 80) {
+                // Display message for proper seating
+                ctx.fillText(`Proper Seating: Beta value ${roundedBeta}`, 10, 50);
 
-    // Replace this part with your actual sensor data collection logic
-    function collectSensorData() {
-      // Simulate collecting the beta sensor value (replace with actual code)
-      const betaValue = Math.random() * 180; // Replace with actual sensor data
+                // Reset time tracking variables
+                startTime = 0;
+                endTime = 0;
+                prevBeta = roundedBeta;
+                hasProperSeating = true;
+            } else if (roundedBeta >= 80 && roundedBeta <= 87) {
+                if (!hasProperSeating) {
+                    // Display message for proper seating first
+                    ctx.fillText(`Proper Seating Required`, 10, 50);
+                } else if (prevBeta < 80 || prevBeta > 87) {
+                    // Display message for intermediate position
+                    ctx.fillText(`Intermediate Position: Beta value ${roundedBeta}`, 10, 50);
 
-      // Send the beta sensor value to the server
-      sendSensorData(betaValue);
-    }
+                    // Start tracking time
+                    startTime = new Date().getTime();
+                    endTime = 0;
+                } else {
+                    // Continue tracking time
+                    endTime = new Date().getTime();
+                    const timeDiff = (endTime - startTime) / 1000;
 
-    // Call the data collection function at a desired interval
-    setInterval(collectSensorData, 1000); // Adjust the interval as needed
+                    if (timeDiff > 60) {
+                        // Display message if time exceeds 60 seconds
+                        ctx.fillText(`User not properly seated`, 10, 150);
+                    } else {
+                        // Display time message
+                        const timeMessage = `Time: ${timeDiff.toFixed(2)} seconds`;
+                        ctx.fillText(`Intermediate Position: Beta value ${roundedBeta}`, 10, 50);
+                        ctx.fillText(timeMessage, 10, 100);
+                    }
+                }
 
-    // Function to display the sensor value on the canvas
-    function displaySensorValue(beta) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'black';
-      ctx.font = '20px Arial';
-      ctx.fillText(`Beta Sensor Value: ${beta.toFixed(2)}`, 10, 30);
-    }
-  </script>
+                // Update previous beta value
+                prevBeta = roundedBeta;
+            } else {
+                // Display message for proper seating
+                ctx.fillText(`Initial Seating: Beta value ${roundedBeta}`, 10, 50);
+
+                // Reset time tracking variables
+                startTime = 0;
+                endTime = 0;
+                prevBeta = roundedBeta;
+                hasProperSeating = false;
+            }
+            
+            // Send the beta value to the server
+            sendSensorDataToServer(roundedBeta);
+        }
+
+        // Function to start the event listeners
+        function startEventListeners() {
+            window.addEventListener("deviceorientation", deviceOrientationHandler);
+            eventListenerAdded = true;
+        }
+
+        // Event listener for device orientation change
+        window.addEventListener("deviceorientation", (event) => {
+            // Get the beta value from the sensor data
+            const beta = event.beta;
+
+            // Update the canvas with the beta value
+            updateCanvas(beta);
+        });
+
+        // Function to send sensor data to the server
+        function sendSensorDataToServer(beta) {
+            const xhr = new XMLHttpRequest();
+            const url = 'http://YOUR_LAPTOP_IP:YOUR_SERVER_PORT'; // Replace with your laptop's IP and server port
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({ betaValue: beta }));
+        }
+    </script>
 </body>
 </html>
