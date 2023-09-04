@@ -12,7 +12,7 @@
     const canvas = document.getElementById('sensorCanvas');
     const ctx = canvas.getContext('2d');
 
-    const ws = new WebSocket('ws://192.168.30.104:3000'); // Replace 'server-ip' with the server's IP address
+    const ws = new WebSocket('ws://192.168.30.104:4000'); // Replace 'server-ip' with the server's IP address
 
     ws.onopen = () => {
       // Connection is open, display the "connected" message on the mobile screen
